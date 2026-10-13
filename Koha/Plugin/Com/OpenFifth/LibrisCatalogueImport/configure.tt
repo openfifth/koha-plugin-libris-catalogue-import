@@ -1,0 +1,144 @@
+[% USE raw %]
+[% USE Asset %]
+[% PROCESS 'i18n.inc' %]
+[% SET footerjs = 1 %]
+[% INCLUDE 'doc-head-open.inc' %]
+<title>[% FILTER collapse %]
+    [% t("Configuration") | html %] &rsaquo;
+    [% t("Libris Catalogue Import") | html %] &rsaquo;
+    [% t("Koha") | html %]
+[% END %]</title>
+[% INCLUDE 'doc-head-close.inc' %]
+</head>
+<body id="plugins_LibrisCatalogueImport_configure" class="plugins">
+[% WRAPPER 'header.inc' %]
+    [% INCLUDE 'cat-search.inc' %]
+[% END %]
+
+[% WRAPPER 'sub-header.inc' %]
+    [% WRAPPER breadcrumbs %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a>
+        [% END %]
+        [% WRAPPER breadcrumb_item %]
+            <a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS %]&method=tool">Libris Catalogue Import</a>
+        [% END %]
+        [% WRAPPER breadcrumb_item bc_active = 1 %]
+            <span>Configuration</span>
+        [% END %]
+    [% END #/ WRAPPER breadcrumbs %]
+[% END #/ WRAPPER sub-header.inc %]
+
+<div class="main container-fluid">
+    <div class="row">
+        <div class="col-md-10 order-md-2 order-sm-1">
+            <main>
+                <h1>Libris Catalogue Import configuration</h1>
+
+                [% IF success_message %]<div class="alert alert-success">[% success_message | html %]</div>[% END %]
+                [% IF error_message %]<div class="alert alert-danger"><strong>Error:</strong> [% error_message | html %]</div>[% END %]
+
+                <form method="post" id="configure_form">
+                    [% INCLUDE 'csrf-token.inc' %]
+                    <input type="hidden" name="class" value="[% CLASS %]"/>
+                    <input type="hidden" name="method" value="configure"/>
+                    <input type="hidden" name="save" value="1"/>
+
+                    <fieldset class="rows">
+                        <legend>Libris export</legend>
+                        <ol>
+                            <li>
+                                <label for="base_url">API address: </label>
+                                <input type="text" id="base_url" name="base_url" size="50" value="[% settings.base_url | html %]"/>
+                                <div class="hint">Use <code>https://libris.kb.se/api/marc_export/</code> for production. Libris also has staging environments: test there first.</div>
+                            </li>
+                            <li>
+                                <label for="user_agent">User-Agent: </label>
+                                <input type="text" id="user_agent" name="user_agent" size="60" value="[% settings.user_agent | html %]"/>
+                                <div class="hint">Libris asks API users to identify themselves. Include a contact address.</div>
+                            </li>
+                            <li>
+                                <label for="export_profile">Export profile: </label>
+                                <textarea id="export_profile" name="export_profile" rows="14" cols="60">[% settings.export_profile | html %]</textarea>
+                                <div class="hint">Sent to Libris as-is. Set <code>locations</code> to your sigel(s). Use <code>format=MARCXML</code> or <code>format=ISO2709</code>. See the <a href="https://libris.kb.se/api/docs/en/reference/marc21/" target="_blank" rel="noreferrer">Libris MARC21 export docs</a>.</div>
+                            </li>
+                            <li>
+                                <label for="initial_from">First run: fetch changes since: </label>
+                                <input type="text" id="initial_from" name="initial_from" size="22" placeholder="2026-10-01T00:00:00Z" value="[% settings.initial_from | html %]"/>
+                                <div class="hint">Required before the first run, and ignored afterwards[% IF last_until %] (last successful run covered up to <strong>[% last_until | html %]</strong>)[% END %]. A date far in the past requests a very large export.</div>
+                            </li>
+                        </ol>
+                    </fieldset>
+
+                    <fieldset class="rows">
+                        <legend>Deleted records</legend>
+                        <ol>
+                            <li>
+                                <label for="deleted_mode">When Libris reports a record deleted: </label>
+                                <select id="deleted_mode" name="deleted_mode">
+                                    <option value="ignore" [% IF settings.deleted_mode == 'ignore' %]selected="selected"[% END %]>Ignore</option>
+                                    <option value="log" [% IF settings.deleted_mode == 'log' %]selected="selected"[% END %]>Log it, change nothing in Koha</option>
+                                    <option value="delete" [% IF settings.deleted_mode == 'delete' %]selected="selected"[% END %]>Delete the Koha record if it has no items</option>
+                                </select>
+                                <div class="hint">Records are matched on the Libris ID in field 001. Records with items are never deleted.</div>
+                            </li>
+                            <li>
+                                <label for="virtual_delete">Treat as deleted when your sigels lose their holdings: </label>
+                                <input type="checkbox" id="virtual_delete" name="virtual_delete" value="1" [% IF settings.virtual_delete %]checked="checked"[% END %]/>
+                            </li>
+                        </ol>
+                    </fieldset>
+
+                    <fieldset class="rows">
+                        <legend>Importing into Koha</legend>
+                        <ol>
+                            <li>
+                                <label for="import_profile_id" class="required">Import profile: </label>
+                                <select id="import_profile_id" name="import_profile_id" required="required">
+                                    <option value="">-- Choose --</option>
+                                    [% FOREACH p IN available_profiles %]
+                                        <option value="[% p.id | html %]" [% IF settings.import_profile_id == p.id %]selected="selected"[% END %]>[% p.name | html %]</option>
+                                    [% END %]
+                                </select>
+                                <div class="hint">Supplies the record matching rule, overlay and no-match actions, item action and MARC modification template. Manage them under Administration &rsaquo; Staged MARC record management &rsaquo; Import profiles.</div>
+                            </li>
+                            <li>
+                                <label for="auto_commit">Commit automatically: </label>
+                                <input type="checkbox" id="auto_commit" name="auto_commit" value="1" [% IF settings.auto_commit %]checked="checked"[% END %]/>
+                                <div class="hint">Unticked, each night's batch is staged for a cataloguer to review and import.</div>
+                            </li>
+                            <li>
+                                <label for="framework">Framework for new records: </label>
+                                <select id="framework" name="framework">
+                                    <option value="">Default</option>
+                                    [% FOREACH f IN frameworks %]
+                                        <option value="[% f.frameworkcode | html %]" [% IF settings.framework == f.frameworkcode %]selected="selected"[% END %]>[% f.frameworktext | html %]</option>
+                                    [% END %]
+                                </select>
+                            </li>
+                            <li>
+                                <label for="overlay_framework">Framework for overlaid records: </label>
+                                <select id="overlay_framework" name="overlay_framework">
+                                    <option value="_USE_ORIG_" [% IF !settings.overlay_framework || settings.overlay_framework == "_USE_ORIG_" %]selected="selected"[% END %]>Keep the record's existing framework</option>
+                                    [% FOREACH f IN frameworks %]
+                                        <option value="[% f.frameworkcode | html %]" [% IF settings.overlay_framework == f.frameworkcode %]selected="selected"[% END %]>[% f.frameworktext | html %]</option>
+                                    [% END %]
+                                </select>
+                            </li>
+                        </ol>
+                    </fieldset>
+
+                    <fieldset class="action">
+                        <input type="submit" class="btn btn-primary" value="Save configuration"/>
+                        <a class="cancel" href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS %]&method=tool">Cancel</a>
+                    </fieldset>
+                </form>
+            </main>
+        </div>
+        <div class="col-md-2 order-sm-2 order-md-1">
+            <aside>[% INCLUDE 'tools-menu.inc' %]</aside>
+        </div>
+    </div>
+</div>
+
+[% INCLUDE 'intranet-bottom.inc' %]

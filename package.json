@@ -1,0 +1,28 @@
+{
+  "plugin": {
+    "module": "Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport",
+    "pm_path": "Koha/Plugin/Com/OpenFifth/LibrisCatalogueImport.pm"
+  },
+  "name": "koha-plugin-libris-catalogue-import",
+  "version": "0.1.0",
+  "previous_version": "0.1.0",
+  "description": "Nightly import of new and changed bibliographic records from the Libris (National Library of Sweden) MARC21 export API, staged through Koha's import batches so matching and overlay rules apply",
+  "scripts": {
+    "version:patch": "node increment_version.js patch | cat",
+    "version:minor": "node increment_version.js minor | cat",
+    "version:major": "node increment_version.js major | cat",
+    "release:patch": "node check_release_ready.js && node increment_version.js patch | cat && PLUGIN_FILE=$(node -p 'require(\"./package.json\").plugin.pm_path') && git add package.json CHANGELOG.md \"$PLUGIN_FILE\" && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && node ensure_workflows_enabled.js && git push origin main --follow-tags",
+    "release:minor": "node check_release_ready.js && node increment_version.js minor | cat && PLUGIN_FILE=$(node -p 'require(\"./package.json\").plugin.pm_path') && git add package.json CHANGELOG.md \"$PLUGIN_FILE\" && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && node ensure_workflows_enabled.js && git push origin main --follow-tags",
+    "release:major": "node check_release_ready.js && node increment_version.js major | cat && PLUGIN_FILE=$(node -p 'require(\"./package.json\").plugin.pm_path') && git add package.json CHANGELOG.md \"$PLUGIN_FILE\" && git commit -m 'chore: bump version' && VERSION=$(node -p 'require(\"./package.json\").version') && git tag -a v$VERSION -m \"Release v$VERSION\" && node ensure_workflows_enabled.js && git push origin main --follow-tags"
+  },
+  "keywords": [
+    "koha",
+    "plugin",
+    "marc",
+    "libris",
+    "import",
+    "sweden"
+  ],
+  "author": "Open Fifth",
+  "license": "GPL-3.0"
+}
