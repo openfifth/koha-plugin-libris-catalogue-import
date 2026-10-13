@@ -119,7 +119,7 @@ jobs:
           "
 
       - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d # v2
         if: always()
         with:
           files: |
@@ -173,7 +173,7 @@ jobs:
 
       - name: Build Koha Plugin kpz artifact
         id: kpz
-        uses: "bywatersolutions/github-action-koha-plugin-create-kpz@v3"
+        uses: "bywatersolutions/github-action-koha-plugin-create-kpz@356e82e61de0403abd68d76b47a253f245efe1fd" # v3
         with:
           release-version: ${{ github.ref_name }}
           release-name: ${{ github.event.repository.name }}
@@ -181,7 +181,7 @@ jobs:
           plugin-module: ${{ steps.package.outputs.plugin_path }}
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           files: |
             ${{ steps.kpz.outputs.filename }}
