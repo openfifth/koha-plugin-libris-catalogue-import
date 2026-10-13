@@ -12,6 +12,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-13
+
 ### Added
 - Initial plugin: nightly fetch of changed bibliographic records from the Libris MARC21 export API, staged as a normal Koha import batch (using an import profile's matcher, overlay, no-match and item actions) with optional auto-commit.
 - Deleted-record handling (`ignore`, `log`, or `delete` when the Koha record has no items), driven by the `deleted=append` ID list and matched on field 001.

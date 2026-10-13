@@ -27,7 +27,7 @@ use Koha::Logger;
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
     qw( profile_format build_uri split_payload iso8601_utc default_url default_profile );
 
-our $VERSION = '0.1.0';
+our $VERSION         = '0.1.1';
 
 our $metadata = {
     name            => 'Libris Catalogue Import',
