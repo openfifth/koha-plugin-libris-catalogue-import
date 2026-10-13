@@ -100,7 +100,7 @@
                                         <option value="[% p.id | html %]" [% IF settings.import_profile_id == p.id %]selected="selected"[% END %]>[% p.name | html %]</option>
                                     [% END %]
                                 </select>
-                                <div class="hint">Supplies the record matching rule, overlay and no-match actions, item action and MARC modification template. Manage them under Administration &rsaquo; Staged MARC record management &rsaquo; Import profiles.</div>
+                                <div class="hint">Supplies the record matching rule, overlay and no-match actions, item action and MARC modification template. Koha has no page for managing profiles yet: create one by choosing your options on Tools &rsaquo; Stage MARC records for import and using <em>Save profile</em> (the same form has <em>Remove profile</em>).</div>
                             </li>
                             <li>
                                 <label for="auto_commit">Commit automatically: </label>
