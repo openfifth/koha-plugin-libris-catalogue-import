@@ -12,6 +12,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-13
+
 ## [0.1.1] - 2026-10-13
 
 ### Added

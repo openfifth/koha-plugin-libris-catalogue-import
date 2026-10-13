@@ -4,8 +4,8 @@
     "pm_path": "Koha/Plugin/Com/OpenFifth/LibrisCatalogueImport.pm"
   },
   "name": "koha-plugin-libris-catalogue-import",
-  "version": "0.1.1",
-  "previous_version": "0.1.0",
+  "version": "0.1.2",
+  "previous_version": "0.1.1",
   "description": "Nightly import of new and changed bibliographic records from the Libris (National Library of Sweden) MARC21 export API, staged through Koha's import batches so matching and overlay rules apply",
   "scripts": {
     "version:patch": "node increment_version.js patch | cat",
