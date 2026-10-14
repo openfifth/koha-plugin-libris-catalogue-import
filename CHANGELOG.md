@@ -12,6 +12,9 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Added
+- The configuration page now shows the contents of the selected import profile: its options, the record matching rule (match points, required checks, threshold) and the MARC modification template actions.
+
 ## [0.1.2] - 2026-10-13
 
 ## [0.1.1] - 2026-10-13

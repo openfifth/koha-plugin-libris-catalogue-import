@@ -101,6 +101,7 @@
                                     [% END %]
                                 </select>
                                 <div class="hint">Supplies the record matching rule, overlay and no-match actions, item action and MARC modification template. Koha has no page for managing profiles yet: create one by choosing your options on Tools &rsaquo; Stage MARC records for import and using <em>Save profile</em> (the same form has <em>Remove profile</em>).</div>
+                            <div id="profile_details" class="mt-2" data-profiles="[% profile_details | html %]" style="display:none"></div>
                             </li>
                             <li>
                                 <label for="auto_commit">Commit automatically: </label>
@@ -140,5 +141,95 @@
         </div>
     </div>
 </div>
+
+[% MACRO jsinclude BLOCK %]
+<script>
+    (function () {
+        const container = document.getElementById('profile_details');
+        const select = document.getElementById('import_profile_id');
+        if (!container || !select) return;
+
+        let profiles = {};
+        try { profiles = JSON.parse(container.dataset.profiles || '{}'); } catch (e) {}
+
+        function el(tag, text, cls) {
+            const e = document.createElement(tag);
+            if (text !== undefined && text !== null) e.textContent = text;
+            if (cls) e.className = cls;
+            return e;
+        }
+
+        function row(table, label, value) {
+            const tr = el('tr');
+            tr.appendChild(el('th', label));
+            const td = el('td');
+            if (value instanceof Node) td.appendChild(value); else td.textContent = value || '';
+            tr.appendChild(td);
+            table.appendChild(tr);
+        }
+
+        function list(items) {
+            const ul = el('ul', null, 'mb-0');
+            items.forEach(function (t) { ul.appendChild(el('li', t)); });
+            return ul;
+        }
+
+        function section(summary, body) {
+            const d = el('details');
+            d.appendChild(el('summary', summary));
+            d.appendChild(body);
+            return d;
+        }
+
+        function matcherBody(m) {
+            const wrap = el('div');
+            if (m.description) wrap.appendChild(el('p', m.description));
+            wrap.appendChild(el('p', 'Match threshold: ' + m.threshold));
+            if (m.matchpoints.length) {
+                wrap.appendChild(el('h4', 'Match points'));
+                wrap.appendChild(list(m.matchpoints.map(function (p) {
+                    return 'Search ' + p.index + ' using ' + p.source + ' (score ' + p.score + ')';
+                })));
+            }
+            if (m.matchchecks.length) {
+                wrap.appendChild(el('h4', 'Required checks'));
+                wrap.appendChild(list(m.matchchecks.map(function (c) {
+                    return 'Incoming ' + c.source + ' must equal existing ' + c.target;
+                })));
+            }
+            return wrap;
+        }
+
+        function render() {
+            container.textContent = '';
+            const p = profiles[select.value];
+            if (!p) { container.style.display = 'none'; return; }
+
+            const table = el('table', null, 'table table-condensed table-bordered');
+            row(table, 'Comments', p.comments);
+            row(table, 'Record type', p.record_type);
+            row(table, 'Character encoding', p.encoding);
+            row(table, 'Format', p.format);
+            row(table, 'Parse items', p.parse_items ? 'Yes' : 'No');
+            row(table, 'Record matching rule', p.matcher
+                ? section(p.matcher.code, matcherBody(p.matcher)) : 'None');
+            row(table, 'Action if matching record found', p.overlay_action);
+            row(table, 'Action if no match is found', p.nomatch_action);
+            row(table, 'How to process items', p.item_action);
+            row(table, 'MARC modification template', p.template
+                ? section(p.template.name + ' (' + p.template.actions.length + ' actions)',
+                    p.template.actions.length ? list(p.template.actions) : el('p', 'No actions'))
+                : 'None');
+
+            container.appendChild(el('h3', 'Selected profile: ' + p.name));
+            container.appendChild(table);
+            container.style.display = '';
+        }
+
+        select.addEventListener('change', render);
+        render();
+    })();
+</script>
+[% END %]
 
 [% INCLUDE 'intranet-bottom.inc' %]

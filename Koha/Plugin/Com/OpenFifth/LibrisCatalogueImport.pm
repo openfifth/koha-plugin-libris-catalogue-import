@@ -9,6 +9,7 @@ use File::Temp qw(tempfile);
 use Try::Tiny qw(catch try);
 
 # CPAN modules
+use JSON ();
 use LWP::UserAgent;
 
 # Koha modules
@@ -17,6 +18,7 @@ use C4::Context;
 use C4::ImportBatch
     qw( RecordsFromISO2709File RecordsFromMARCXMLFile BatchStageMarcRecords BatchCommitRecords SetImportBatchMatcher SetImportBatchOverlayAction SetImportBatchNoMatchAction SetImportBatchItemAction BatchFindDuplicates );
 use C4::Matcher;
+use C4::MarcModificationTemplates qw( GetModificationTemplates GetModificationTemplateActions );
 use Koha::BiblioFrameworks;
 use Koha::Biblios;
 use Koha::Database;
@@ -26,6 +28,7 @@ use Koha::Logger;
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
     qw( profile_format build_uri split_payload iso8601_utc default_url default_profile );
+use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::ProfileSummary qw( summarise_profile describe_matcher );
 
 our $VERSION         = '0.1.2';
 
@@ -107,11 +110,50 @@ sub configure {
     $template->param(
         settings           => $self->_settings,
         available_profiles => Koha::ImportBatchProfiles->search(),
+        profile_details    => JSON->new->canonical->encode( $self->_profile_details ),  # characters, not bytes: TT encodes on output
         frameworks         => Koha::BiblioFrameworks->search( {}, { order_by => ['frameworktext'] } ),
         last_until         => $self->retrieve_data('last_until'),
     );
 
     $self->output_html( $template->output() );
+}
+
+# Every import profile flattened for display on the configuration page,
+# keyed by profile id: its own options plus the contents of its record
+# matching rule and MARC modification template.
+sub _profile_details {
+    my ($self) = @_;
+
+    my %template_names = map { $_->{template_id} => $_->{name} } GetModificationTemplates();
+
+    my %details;
+    my $profiles = Koha::ImportBatchProfiles->search();
+    while ( my $profile = $profiles->next ) {
+        my $matcher;
+        if ( my $matcher_id = $profile->matcher_id ) {
+            if ( my $m = C4::Matcher->fetch($matcher_id) ) {
+                $matcher = describe_matcher( $m->dump, $m->threshold );
+            }
+        }
+
+        my $template;
+        if ( my $template_id = $profile->template_id ) {
+            $template = {
+                name    => $template_names{$template_id} // '',
+                actions => [ GetModificationTemplateActions($template_id) ],
+            };
+        }
+
+        $details{ $profile->id } = summarise_profile(
+            {
+                profile  => $profile->unblessed,
+                matcher  => $matcher,
+                template => $template,
+            }
+        );
+    }
+
+    return \%details;
 }
 
 sub tool {

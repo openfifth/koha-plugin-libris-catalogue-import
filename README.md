@@ -10,7 +10,7 @@ This plugin only covers catalogue records. Other Libris services (ILL, patrons, 
 
 1. Create an import profile with the matching rule and overlay/no-match/item actions you want. Koha has no management page for profiles yet (see [bug 30800](https://bugs.koha-community.org/bugzilla3/show_bug.cgi?id=30800)): on Tools → Stage MARC records for import, choose your options and use *Save profile*.
 2. Install the plugin and enable the plugin cron job (`plugins_nightly` in your crontab; see the Koha plugins documentation).
-3. Plugin → Configure: choose the import profile, set your Libris sigel(s) in the export profile (`locations=`), and set the date the first run should fetch from.
+3. Plugin → Configure: choose the import profile (the page then shows what it contains: matching rule, overlay/no-match/item actions and MARC modification template), set your Libris sigel(s) in the export profile (`locations=`), and set the date the first run should fetch from.
 4. Try it against a Libris staging environment (change the API address) before pointing it at production.
 5. On the plugin's tool page, use **Run now** for a first run and check the staged batch.
 
