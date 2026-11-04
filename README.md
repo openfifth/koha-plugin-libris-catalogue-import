@@ -33,3 +33,7 @@ This plugin only covers catalogue records. Other Libris services (ILL, patrons, 
 export KOHA_PLUGIN_DIR=$(pwd) && prove t/
 npm run release:patch   # bump version, tag, push (CI builds the .kpz)
 ```
+
+## Licence
+
+This plugin is licensed under the GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
