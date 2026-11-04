@@ -14,6 +14,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ### Changed
 
+- Adopt the plugin template's CI and release tooling: `npm run release:*` scripts and preflight, `DEVELOPMENT.md`, a `t/00-load.t` smoke test and the GitHub Actions workflow (already current/customised, left as is).
+
 - Relicensed under AGPL-3.0-or-later: added `LICENSE`, SPDX header, and `license`/`license_url` plugin metadata (the licence is also stated in the description, which is what Koha displays).
 
 ## [0.2.0] - 2026-10-14
@@ -29,3 +31,5 @@ along with the comparison links — do not edit the heading or the links by hand
 - Initial plugin: nightly fetch of changed bibliographic records from the Libris MARC21 export API, staged as a normal Koha import batch (using an import profile's matcher, overlay, no-match and item actions) with optional auto-commit.
 - Deleted-record handling (`ignore`, `log`, or `delete` when the Koha record has no items), driven by the `deleted=append` ID list and matched on field 001.
 - Run history and "Run now" on the tool page; the fetch window only advances after a successful staging run.
+
+[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.0...HEAD
