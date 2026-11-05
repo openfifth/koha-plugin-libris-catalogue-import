@@ -95,7 +95,7 @@ subtest 'successful run stages a batch and advances the window' => sub {
 };
 
 subtest 'HTTP failure does not advance the window' => sub {
-    plan tests => 4;
+    plan tests => 6;
     $schema->storage->txn_begin;
 
     my $profile = $new_profile->();
@@ -106,6 +106,8 @@ subtest 'HTTP failure does not advance the window' => sub {
 
     is( $run->{outcome}, 'failure', 'run failed' );
     like( $run->{error_message}, qr/500/, 'status in error' );
+    like( $run->{error_message}, qr/Window: from \S+ until \S+/, 'requested window in error' );
+    like( $run->{error_message}, qr/Libris said: boom/, 'response body detail in error' );
     ok( !$plugin->retrieve_data('last_until'), 'window not advanced' );
     is( $run_count->($plugin), 1, 'failure logged' );
 
