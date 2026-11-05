@@ -12,7 +12,7 @@ This plugin only covers catalogue records. Other Libris services (ILL, patrons, 
 2. Install the plugin and enable the plugin cron job (`plugins_nightly` in your crontab; see the Koha plugins documentation).
 3. Plugin → Configure: choose the import profile (the page then shows what it contains: matching rule, overlay/no-match/item actions and MARC modification template), set your Libris sigel(s) in the export profile (`locations=`), and set the date the first run should fetch from.
 4. Try it against a Libris staging environment (change the API address) before pointing it at production.
-5. On the plugin's tool page, use **Run now** for a first run and check the staged batch.
+5. On the plugin's tool page, use **Run now** for a first run and check the staged batch. The run is queued as a Koha background job (the Koha worker, `koha-worker`, must be running) because a large export can take several minutes; the result appears under Recent runs when it finishes. Only one run can be active at a time.
 
 ## How it works
 

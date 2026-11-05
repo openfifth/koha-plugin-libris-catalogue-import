@@ -12,6 +12,11 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Changed
+
+- "Run now" queues a Koha background job instead of running in the web request, so a large export no longer hits the browser or proxy timeout. The tool page links to the job and shows the result under Recent runs when it finishes. This needs the Koha worker (`koha-worker`) to be running.
+- Only one export can run at a time. "Run now" is disabled while a job is queued or running, and a second run (including the nightly cron) is logged as `skipped` rather than fetching the same window twice.
+
 ### Fixed
 
 - Every export request was rejected by Libris with `400 Bad Request` because the colons in the `from`/`until` timestamps were sent percent-encoded (`%3A`). They are now sent literally.

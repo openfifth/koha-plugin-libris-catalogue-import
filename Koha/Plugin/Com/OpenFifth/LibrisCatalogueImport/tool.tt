@@ -31,26 +31,27 @@
             <main>
                 <h1>Libris Catalogue Import</h1>
 
-                [% IF run_result %]
-                    [% IF run_result.outcome == 'success' %]
-                        <div class="alert alert-success">Import run finished: [% run_result.num_records | html %] records staged[% IF run_result.batch_id %] in <a href="/cgi-bin/koha/tools/manage-marc-import.pl?import_batch_id=[% run_result.batch_id | uri %]">batch [% run_result.batch_id | html %]</a>[% END %], [% run_result.num_deleted | html %] deleted.</div>
-                    [% ELSIF run_result.outcome == 'partial' %]
-                        <div class="alert alert-warning">Import run finished with problems: <pre>[% run_result.error_message | html %]</pre></div>
-                    [% ELSE %]
-                        <div class="alert alert-danger"><strong>Import run failed:</strong><pre class="mb-0">[% run_result.error_message | html %]</pre></div>
-                    [% END %]
+                [% IF enqueue_result.error %]
+                    <div class="alert alert-danger"><strong>Import not started:</strong> [% enqueue_result.error | html %]</div>
+                [% ELSIF enqueue_result.job_id %]
+                    <div class="alert alert-success">Import queued as <a href="/cgi-bin/koha/admin/background_jobs.pl?op=view&amp;id=[% enqueue_result.job_id | uri %]">background job [% enqueue_result.job_id | html %]</a>. It runs in the background and can take several minutes: the result appears under Recent runs below when it finishes.</div>
+                [% ELSIF enqueue_result.already_running %]
+                    <div class="alert alert-warning">An import is already queued or running (<a href="/cgi-bin/koha/admin/background_jobs.pl?op=view&amp;id=[% enqueue_result.already_running | uri %]">background job [% enqueue_result.already_running | html %]</a>), so no new one was started.</div>
                 [% END %]
 
                 [% IF !configured %]
                     <div class="alert alert-info">Not configured yet. <a href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS %]&method=configure">Configure the plugin</a> to start importing.</div>
                 [% ELSE %]
                     <p>Runs nightly with Koha's plugin cron job.[% IF last_until %] Records changed up to <strong>[% last_until | html %]</strong> have been fetched.[% END %]</p>
+                    [% IF active_job && !enqueue_result.already_running %]
+                        <div class="alert alert-info">An import is queued or running (<a href="/cgi-bin/koha/admin/background_jobs.pl?op=view&amp;id=[% active_job.id | uri %]">background job [% active_job.id | html %]</a>, status: [% active_job.status | html %]). Run now is unavailable until it finishes.</div>
+                    [% END %]
                     <form method="post">
                         [% INCLUDE 'csrf-token.inc' %]
                         <input type="hidden" name="class" value="[% CLASS %]"/>
                         <input type="hidden" name="method" value="tool"/>
                         <input type="hidden" name="run_now" value="1"/>
-                        <input type="submit" class="btn btn-primary" value="Run now"/>
+                        <input type="submit" class="btn btn-primary" value="Run now"[% IF active_job %] disabled="disabled" title="An import is already queued or running"[% END %]/>
                         <a class="btn btn-default" href="/cgi-bin/koha/plugins/run.pl?class=[% CLASS %]&method=configure">Configure</a>
                     </form>
                 [% END %]

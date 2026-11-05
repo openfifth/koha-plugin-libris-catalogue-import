@@ -37,6 +37,7 @@ use C4::ImportBatch
 use C4::Matcher;
 use C4::MarcModificationTemplates qw( GetModificationTemplates GetModificationTemplateActions );
 use Koha::BiblioFrameworks;
+use Koha::BackgroundJobs;
 use Koha::Biblios;
 use Koha::Database;
 use Koha::ImportBatches;
@@ -51,6 +52,7 @@ our $VERSION         = '0.2.3';
 
 our $metadata = {
     name            => 'Libris Catalogue Import',
+    namespace       => 'libris_catalogue_import',
     author          => 'Open Fifth',
     date_authored   => '2026-10-13',
     date_updated    => '2026-11-05',
@@ -180,8 +182,9 @@ sub tool {
     my $template = $self->get_template( { file => 'tool.tt' } );
 
     if ( $cgi->param('run_now') ) {
-        my $run = $self->run_export;
-        $template->param( run_result => $run );
+        if ( $self->_is_configured ) {
+            $template->param( enqueue_result => $self->enqueue_run );
+        }
     }
 
     my $table = $self->_log_table_name;
@@ -194,6 +197,7 @@ sub tool {
         runs       => $runs,
         last_until => $self->retrieve_data('last_until'),
         configured => $self->_is_configured ? 1 : 0,
+        active_job => $self->active_job,
     );
 
     $self->output_html( $template->output() );
@@ -209,6 +213,87 @@ sub cronjob_nightly {
 
     $self->run_export;
     return;
+}
+
+# BACKGROUND JOBS
+
+# Registers the job class with Koha so the worker can run it.
+sub background_tasks {
+    return {
+        run => {
+            class => 'Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Job',
+            name  => 'Libris catalogue import',
+        },
+    };
+}
+
+# A queued or running job older than this is assumed dead (e.g. the worker
+# was down) so it cannot block new runs forever.
+use constant STALE_JOB_HOURS => 12;
+
+=head2 active_job
+
+Returns the pending or running Libris import job, if any.
+
+=cut
+
+sub active_job {
+    my ($self) = @_;
+
+    require Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Job;
+    require Koha::DateUtils;
+    my $cutoff = Koha::DateUtils::dt_from_string()->subtract( hours => STALE_JOB_HOURS );
+
+    return Koha::BackgroundJobs->search(
+        {
+            type        => Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Job->job_type,
+            status      => [ 'new', 'started' ],
+            enqueued_on => { '>' => Koha::Database->new->schema->storage->datetime_parser->format_datetime($cutoff) },
+        },
+        { order_by => { -desc => 'id' }, rows => 1 }
+    )->next;
+}
+
+=head2 enqueue_run
+
+Queues a background export unless one is already pending or running.
+Returns C<{ job_id => $id }> for a new job or C<{ already_running => $id }>.
+The check and the enqueue happen under a database lock so two simultaneous
+clicks cannot both queue a run.
+
+=cut
+
+sub enqueue_run {
+    my ( $self, %args ) = @_;
+
+    require Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Job;
+
+    my $lock = $self->_lock_name('enqueue');
+    my ($got) = C4::Context->dbh->selectrow_array( 'SELECT GET_LOCK(?, 10)', undef, $lock );
+    return { error => 'Could not take the enqueue lock, please try again.' } unless $got;
+
+    my $result;
+    try {
+        if ( my $job = $self->active_job ) {
+            $result = { already_running => $job->id };
+        } else {
+            my $job_id = Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Job->new->enqueue( { from => $args{from} } );
+            $result = { job_id => $job_id };
+        }
+    } catch {
+        $self->{logger}->error("Could not enqueue Libris export: $_");
+        $result = { error => "Could not queue the import: $_" };
+    };
+    C4::Context->dbh->do( 'SELECT RELEASE_LOCK(?)', undef, $lock );
+
+    return $result;
+}
+
+# MySQL lock names are server-wide, so include the database name to keep
+# several Koha instances on one server from blocking each other.
+sub _lock_name {
+    my ( $self, $what ) = @_;
+    return substr( join( '.', 'libris_catalogue_import', C4::Context->config('database') // '', $what ), 0, 64 );
 }
 
 # CORE
@@ -239,6 +324,18 @@ sub run_export {
         num_records => 0,
         num_deleted => 0,
     };
+
+    # Only one run at a time, whether started by the worker or by cron: two
+    # overlapping runs would fetch and stage the same window twice. The lock
+    # is held on this connection, so it is released if the process dies.
+    my $lock = $self->_lock_name('run');
+    my ($got) = C4::Context->dbh->selectrow_array( 'SELECT GET_LOCK(?, 0)', undef, $lock );
+    unless ($got) {
+        $run->{outcome}       = 'skipped';
+        $run->{error_message} = 'Another Libris import run is already in progress.';
+        $self->_log_run($run);
+        return $run;
+    }
 
     try {
         die "No start date: set 'First run: fetch changes since' in the plugin configuration\n"
@@ -273,6 +370,8 @@ sub run_export {
         $self->{logger}->error("Libris export run failed: $error");
         $run->{error_message} = $error;
     };
+
+    C4::Context->dbh->do( 'SELECT RELEASE_LOCK(?)', undef, $lock );
 
     $self->_log_run($run);
     return $run;
