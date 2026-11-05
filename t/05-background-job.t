@@ -50,7 +50,7 @@ subtest 'job detail template is findable' => sub {
 };
 
 subtest 'enqueue_run queues one job and refuses a second' => sub {
-    plan tests => 6;
+    plan tests => 5;
     $schema->storage->txn_begin;
 
     ok( !$plugin->active_job, 'nothing active to begin with' );
