@@ -12,6 +12,14 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Fixed
+
+- A first-run start date entered as a bare date (`2026-11-04`) made Libris reject the export with `400 Bad Request`. Bare dates are now sent as midnight UTC.
+
+### Changed
+
+- A failed export now reports the time window requested and the explanation Libris returned, not just the HTTP status.
+
 ## [0.2.1] - 2026-11-05
 
 ### Changed

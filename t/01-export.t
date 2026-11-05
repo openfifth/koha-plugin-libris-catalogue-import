@@ -1,11 +1,11 @@
 use Modern::Perl;
-use Test::More tests => 14;
+use Test::More tests => 24;
 
 use FindBin;
 use lib "$FindBin::Bin/..";
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
-    qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile );
+    qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail );
 
 is( profile_format("name=x\nformat=ISO2709\n"), 'ISO2709', 'format read from profile' );
 is( profile_format("format = marcxml\n"),       'MARCXML', 'format is case-insensitive and tolerates spaces' );
@@ -32,3 +32,18 @@ my ( $m2, $i2 ) = split_payload('<record/>');
 is_deeply( $i2, [], 'no NUL means no deleted IDs' );
 
 is( iso8601_utc(0), '1970-01-01T00:00:00Z', 'epoch formatted as UTC ISO-8601' );
+
+is( normalise_timestamp('2026-11-04'),           '2026-11-04T00:00:00Z', 'bare date expanded to midnight UTC' );
+is( normalise_timestamp('2026-11-04T01:02:03Z'), '2026-11-04T01:02:03Z', 'full timestamp unchanged' );
+is( normalise_timestamp(undef),                  undef,                  'undef unchanged' );
+
+my %d = build_uri( { from => '2026-11-04', until => '2026-11-05', deleted_mode => 'log' } )->query_form;
+is( $d{from},  '2026-11-04T00:00:00Z', 'build_uri expands bare from date' );
+is( $d{until}, '2026-11-05T00:00:00Z', 'build_uri expands bare until date' );
+
+is( error_detail('<html><head><title>Error 400 Valid &quot;from&quot; required</title></head><body>x</body></html>'),
+    'Error 400 Valid "from" required', 'title extracted and entities decoded' );
+is( error_detail("<p>Something\n  went <b>wrong</b></p>"), 'Something went wrong', 'tags stripped when no title' );
+is( error_detail(''),    '', 'empty body gives empty detail' );
+is( error_detail(undef), '', 'undef body gives empty detail' );
+like( error_detail( 'x' x 2000 ), qr/^x{497}\.\.\.$/, 'long body truncated' );

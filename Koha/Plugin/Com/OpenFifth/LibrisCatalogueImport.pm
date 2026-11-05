@@ -305,7 +305,14 @@ sub _fetch {
         'Content-Type' => 'application/x-www-form-urlencoded',
         Content        => $settings->{export_profile},
     );
-    die "Libris export request failed: " . $response->status_line . "\n" unless $response->is_success;
+    unless ( $response->is_success ) {
+        my $detail = error_detail( $response->decoded_content );
+        die join( "\n",
+            "Libris export request failed: " . $response->status_line,
+            "Window: from $from until $until",
+            ( length $detail ? "Libris said: $detail" : () ),
+        ) . "\n";
+    }
 
     return split_payload( $response->content );
 }

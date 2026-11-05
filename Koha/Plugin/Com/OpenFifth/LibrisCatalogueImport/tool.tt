@@ -37,7 +37,7 @@
                     [% ELSIF run_result.outcome == 'partial' %]
                         <div class="alert alert-warning">Import run finished with problems: <pre>[% run_result.error_message | html %]</pre></div>
                     [% ELSE %]
-                        <div class="alert alert-danger"><strong>Import run failed:</strong> [% run_result.error_message | html %]</div>
+                        <div class="alert alert-danger"><strong>Import run failed:</strong><pre class="mb-0">[% run_result.error_message | html %]</pre></div>
                     [% END %]
                 [% END %]
 

@@ -9,7 +9,7 @@ use Modern::Perl;
 use URI;
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile );
+our @EXPORT_OK = qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail );
 
 our $DEFAULT_URL = 'https://libris.kb.se/api/marc_export/';
 
@@ -73,12 +73,57 @@ sub build_uri {
 
     my $uri = URI->new( $args->{base_url} || $DEFAULT_URL );
     $uri->query_form(
-        from          => $args->{from},
-        until         => $args->{until},
+        from          => normalise_timestamp( $args->{from} ),
+        until         => normalise_timestamp( $args->{until} ),
         deleted       => $deleted,
         virtualDelete => $args->{virtual_delete} ? 'true' : 'false',
     );
     return $uri;
+}
+
+=head2 normalise_timestamp
+
+    my $ts = normalise_timestamp('2026-11-04');   # 2026-11-04T00:00:00Z
+
+Libris rejects a bare date with a 400, so a C<YYYY-MM-DD> value is expanded to
+midnight UTC. Anything else is returned unchanged.
+
+=cut
+
+sub normalise_timestamp {
+    my ($value) = @_;
+    return $value unless defined $value;
+    return "${value}T00:00:00Z" if $value =~ /^\d{4}-\d{2}-\d{2}$/;
+    return $value;
+}
+
+=head2 error_detail
+
+    my $text = error_detail( $response_body );
+
+Turns an error response body into a short single-line message: the HTML
+C<< <title> >> if there is one (Libris puts its explanation there), otherwise
+the body with tags stripped. Truncated to 500 characters; empty string when
+there is nothing useful.
+
+=cut
+
+sub error_detail {
+    my ($body) = @_;
+    return '' unless defined $body && $body =~ /\S/;
+
+    my $text = $body;
+    if ( $body =~ m{<title>(.*?)</title>}is ) {
+        $text = $1;
+    } else {
+        $text =~ s/<[^>]*>/ /g;
+    }
+    my %entity = ( quot => '"', amp => '&', lt => '<', gt => '>', apos => "'" );
+    $text =~ s/&(quot|amp|lt|gt|apos);/$entity{$1}/g;
+    $text =~ s/\s+/ /g;
+    $text =~ s/^ | $//g;
+    $text = substr( $text, 0, 497 ) . '...' if length $text > 500;
+    return $text;
 }
 
 =head2 split_payload
