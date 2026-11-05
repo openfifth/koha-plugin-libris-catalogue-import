@@ -12,6 +12,11 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Fixed
+
+- A run where nothing had changed in Libris failed with "Libris returned data but no valid MARC records could be read from it". Libris answers with an empty `<collection>` rather than an empty body, which was mistaken for data. It is now a successful run with no batch.
+- When MARC parsing does fail, the error now includes Koha's parse errors.
+
 ## [0.3.2] - 2026-11-05
 
 ## [0.3.1] - 2026-11-05

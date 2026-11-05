@@ -1,6 +1,6 @@
 use Modern::Perl;
 
-use Test::More tests => 6;
+use Test::More tests => 7;
 use Test::MockModule;
 use HTTP::Response;
 
@@ -126,6 +126,25 @@ subtest 'empty export succeeds without a batch' => sub {
 
     is( $run->{outcome}, 'success', 'nothing changed is a success' );
     ok( !$run->{batch_id}, 'no batch created' );
+    ok( $plugin->retrieve_data('last_until'), 'window advanced' );
+
+    $schema->storage->txn_rollback;
+};
+
+subtest 'an empty MARCXML collection is treated as no changes' => sub {
+    plan tests => 4;
+    $schema->storage->txn_begin;
+
+    my $profile = $new_profile->();
+    my $plugin  = $new_plugin->( profile => $profile );
+
+    # What Libris really sends when nothing changed: not blank, but no records.
+    my $mock = $respond_with->( 200, '<?xml version="1.0" encoding="utf-8"?>' . "\n" . $collection->() . "\n" );
+    my $run  = $plugin->run_export;
+
+    is( $run->{outcome}, 'success', 'empty collection is a success, not a parse failure' );
+    ok( !$run->{batch_id}, 'no batch created' );
+    is( $run->{num_records}, 0, 'no records counted' );
     ok( $plugin->retrieve_data('last_until'), 'window advanced' );
 
     $schema->storage->txn_rollback;

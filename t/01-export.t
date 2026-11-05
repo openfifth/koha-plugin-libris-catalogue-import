@@ -1,11 +1,11 @@
 use Modern::Perl;
-use Test::More tests => 26;
+use Test::More tests => 32;
 
 use FindBin;
 use lib "$FindBin::Bin/..";
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
-    qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail );
+    qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail has_records );
 
 is( profile_format("name=x\nformat=ISO2709\n"), 'ISO2709', 'format read from profile' );
 is( profile_format("format = marcxml\n"),       'MARCXML', 'format is case-insensitive and tolerates spaces' );
@@ -51,3 +51,11 @@ like( error_detail( 'x' x 2000 ), qr/^x{497}\.\.\.$/, 'long body truncated' );
 like( $uri->as_string, qr/[?&]from=2026-10-01T00:00:00Z&until=2026-10-02T00:00:00Z&/,
     'timestamp colons are sent literally, not as %3A (Libris rejects %3A)' );
 unlike( $uri->as_string, qr/%3A/i, 'no percent-encoded colons in the request URL' );
+
+my $empty_collection = qq{<?xml version="1.0" encoding="utf-8"?>\n<collection xmlns="http://www.loc.gov/MARC21/slim">\n</collection>};
+ok( !has_records( '',                'MARCXML' ), 'blank is no records' );
+ok( !has_records( undef,             'MARCXML' ), 'undef is no records' );
+ok( !has_records( $empty_collection, 'MARCXML' ), 'empty MARCXML collection is no records' );
+ok(  has_records( '<collection><record><leader>x</leader></record></collection>', 'MARCXML' ), 'MARCXML with a record' );
+ok(  has_records( '<marc:collection><marc:record/></marc:collection>', 'MARCXML' ), 'namespace-prefixed record' );
+ok(  has_records( "00026nam a2200025 a 4500\x1e\x1d", 'ISO2709' ), 'ISO2709 data counts as records' );

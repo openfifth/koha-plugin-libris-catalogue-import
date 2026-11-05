@@ -9,7 +9,7 @@ use Modern::Perl;
 use URI;
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail );
+our @EXPORT_OK = qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail has_records );
 
 our $DEFAULT_URL = 'https://libris.kb.se/api/marc_export/';
 
@@ -131,6 +131,23 @@ sub error_detail {
     $text =~ s/^ | $//g;
     $text = substr( $text, 0, 497 ) . '...' if length $text > 500;
     return $text;
+}
+
+=head2 has_records
+
+    if ( has_records( $marc, $format ) ) { ... }
+
+True when the MARC part of an export actually contains records. When nothing
+has changed Libris does not send an empty body: for MARCXML it sends an empty
+C<< <collection> >> element, which is not blank text but holds no records.
+
+=cut
+
+sub has_records {
+    my ( $marc, $format ) = @_;
+    return 0 unless defined $marc && $marc =~ /\S/;
+    return 1 if ( $format // '' ) eq 'ISO2709';
+    return $marc =~ m{<(?:\w+:)?record[\s>/]} ? 1 : 0;
 }
 
 =head2 split_payload

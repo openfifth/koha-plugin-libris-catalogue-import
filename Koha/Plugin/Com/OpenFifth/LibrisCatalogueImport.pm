@@ -45,7 +45,7 @@ use Koha::ImportBatchProfiles;
 use Koha::Logger;
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
-    qw( profile_format build_uri split_payload iso8601_utc default_url default_profile error_detail );
+    qw( profile_format build_uri split_payload iso8601_utc default_url default_profile error_detail has_records );
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::ProfileSummary qw( summarise_profile describe_matcher );
 
 our $VERSION         = '0.3.2';
@@ -350,7 +350,7 @@ sub run_export {
 
         my ( $marc, $deleted_ids ) = $self->_fetch( $settings, $from, $until );
 
-        if ( $marc =~ /\S/ ) {
+        if ( has_records( $marc, profile_format( $settings->{export_profile} ) ) ) {
             my $batch = $self->_stage( $settings, $marc, $until );
             $run->{batch_id}    = $batch->{batch_id};
             $run->{num_records} = $batch->{num_records};
@@ -454,7 +454,11 @@ sub _stage {
             $self->{logger}->error("MARC parsing error: $_") for @{ $errors // [] };
 
             $num_records = $records ? scalar @$records : 0;
-            die "Libris returned data but no valid MARC records could be read from it\n" unless $num_records;
+            unless ($num_records) {
+                my $detail = error_detail( join( ' ', map { "$_" } grep { defined } @{ $errors // [] } ) );
+                die "Libris returned data but no valid MARC records could be read from it"
+                    . ( length $detail ? ": $detail" : '' ) . "\n";
+            }
 
             my ( $id, $num_valid, $num_items, @import_errors ) = BatchStageMarcRecords(
                 $record_type, $encoding, $records, $display_name,
