@@ -6,8 +6,8 @@
     "module": "Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport",
     "pm_path": "Koha/Plugin/Com/OpenFifth/LibrisCatalogueImport.pm"
   },
-  "version": "0.3.1",
-  "previous_version": "0.3.0",
+  "version": "0.3.2",
+  "previous_version": "0.3.1",
   "scripts": {
     "version:patch": "node increment_version.js patch | cat",
     "version:minor": "node increment_version.js minor | cat",
