@@ -78,6 +78,13 @@ sub build_uri {
         deleted       => $deleted,
         virtualDelete => $args->{virtual_delete} ? 'true' : 'false',
     );
+
+    # Libris answers 400 if the colons in the timestamps are percent-encoded
+    # (from=2026-10-17T00%3A00%3A00Z), which query_form always does. Colons
+    # are legal in a query string, so send them literally.
+    ( my $query = $uri->query ) =~ s/%3A/:/gi;
+    $uri->query($query);
+
     return $uri;
 }
 

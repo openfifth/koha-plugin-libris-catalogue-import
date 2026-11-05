@@ -12,6 +12,10 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Fixed
+
+- Every export request was rejected by Libris with `400 Bad Request` because the colons in the `from`/`until` timestamps were sent percent-encoded (`%3A`). They are now sent literally.
+
 ## [0.2.3] - 2026-11-05
 
 ## [0.2.2] - 2026-11-05

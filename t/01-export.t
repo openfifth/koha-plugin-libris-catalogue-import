@@ -1,5 +1,5 @@
 use Modern::Perl;
-use Test::More tests => 24;
+use Test::More tests => 26;
 
 use FindBin;
 use lib "$FindBin::Bin/..";
@@ -47,3 +47,7 @@ is( error_detail("<p>Something\n  went <b>wrong</b></p>"), 'Something went wrong
 is( error_detail(''),    '', 'empty body gives empty detail' );
 is( error_detail(undef), '', 'undef body gives empty detail' );
 like( error_detail( 'x' x 2000 ), qr/^x{497}\.\.\.$/, 'long body truncated' );
+
+like( $uri->as_string, qr/[?&]from=2026-10-01T00:00:00Z&until=2026-10-02T00:00:00Z&/,
+    'timestamp colons are sent literally, not as %3A (Libris rejects %3A)' );
+unlike( $uri->as_string, qr/%3A/i, 'no percent-encoded colons in the request URL' );
