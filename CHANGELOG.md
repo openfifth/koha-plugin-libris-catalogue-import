@@ -12,6 +12,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-05
+
 ### Fixed
 
 - A run where nothing had changed in Libris failed with "Libris returned data but no valid MARC records could be read from it". Libris answers with an empty `<collection>` rather than an empty body, which was mistaken for data. It is now a successful run with no batch.
@@ -70,7 +72,8 @@ along with the comparison links — do not edit the heading or the links by hand
 - Deleted-record handling (`ignore`, `log`, or `delete` when the Koha record has no items), driven by the `deleted=append` ID list and matched on field 001.
 - Run history and "Run now" on the tool page; the fetch window only advances after a successful staging run.
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.3...v0.3.0
