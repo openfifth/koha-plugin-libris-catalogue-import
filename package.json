@@ -6,7 +6,7 @@
     "module": "Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport",
     "pm_path": "Koha/Plugin/Com/OpenFifth/LibrisCatalogueImport.pm"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "previous_version": "0.2.0",
   "scripts": {
     "version:patch": "node increment_version.js patch | cat",

@@ -12,6 +12,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-05
+
 ### Changed
 
 - Adopt the plugin template's CI and release tooling: `npm run release:*` scripts and preflight, `DEVELOPMENT.md`, a `t/00-load.t` smoke test and the GitHub Actions workflow (already current/customised, left as is).
@@ -32,4 +34,5 @@ along with the comparison links — do not edit the heading or the links by hand
 - Deleted-record handling (`ignore`, `log`, or `delete` when the Koha record has no items), driven by the `deleted=append` ID list and matched on field 001.
 - Run history and "Run now" on the tool page; the fetch window only advances after a successful staging run.
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.0...v0.2.1
