@@ -12,6 +12,10 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Fixed
+
+- The background job's detail page in Koha returned a 500 because the plugin supplied no template for its job type. It now shows the run's outcome, window, record counts and batch link.
+
 ## [0.3.0] - 2026-11-05
 
 ### Changed

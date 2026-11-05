@@ -227,6 +227,13 @@ sub background_tasks {
     };
 }
 
+# Koha's job detail page PROCESSes background_jobs/<job type>.inc; this makes
+# our copy (in inc/) findable. Without it the page fails with a 500.
+sub template_include_paths {
+    my ($self) = @_;
+    return [ $self->mbf_path('inc') ];
+}
+
 # A queued or running job older than this is assumed dead (e.g. the worker
 # was down) so it cannot block new runs forever.
 use constant STALE_JOB_HOURS => 12;

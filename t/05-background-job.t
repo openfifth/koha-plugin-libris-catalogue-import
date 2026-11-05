@@ -1,6 +1,6 @@
 use Modern::Perl;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 use Test::MockModule;
 
 use C4::Context;
@@ -36,8 +36,21 @@ subtest 'plugin registers its job type' => sub {
     is( $job_type, 'plugin_' . $plugin->get_metadata->{namespace} . '_run', 'job_type matches the key Koha derives from the namespace' );
 };
 
+subtest 'job detail template is findable' => sub {
+    plan tests => 4;
+
+    my $paths = $plugin->template_include_paths;
+    my ($file) = grep { -f $_ } map { "$_/background_jobs/$job_type.inc" } @$paths;
+    ok( $file, 'background_jobs/<job_type>.inc exists in a template include path' );
+
+    my $inc = do { local ( @ARGV, $/ ) = ($file); <> };
+    like( $inc, qr/BLOCK report/, 'has the report block' );
+    like( $inc, qr/BLOCK detail/, 'has the detail block' );
+    like( $inc, qr/BLOCK js/,     'has the js block' );
+};
+
 subtest 'enqueue_run queues one job and refuses a second' => sub {
-    plan tests => 5;
+    plan tests => 6;
     $schema->storage->txn_begin;
 
     ok( !$plugin->active_job, 'nothing active to begin with' );
