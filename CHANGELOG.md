@@ -12,6 +12,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-05
+
 ### Fixed
 
 - The background job's detail page in Koha returned a 500 because the plugin supplied no template for its job type. It now shows the run's outcome, window, record counts and batch link.
@@ -61,7 +63,8 @@ along with the comparison links — do not edit the heading or the links by hand
 - Deleted-record handling (`ignore`, `log`, or `delete` when the Koha record has no items), driven by the `deleted=append` ID list and matched on field 001.
 - Run history and "Run now" on the tool page; the fetch window only advances after a successful staging run.
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.3...v0.3.0
 [0.2.3]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.2.1...v0.2.2
