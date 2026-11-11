@@ -12,6 +12,8 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-11-11
+
 ### Changed
 
 - Removed the "first run: fetch changes since" setting (any stored value is ignored). Libris refuses `from` more than 3 weeks back, so the first run now fetches the last 20 days. A marker older than 3 weeks is clamped the same way and the run logged as `partial`.
@@ -79,7 +81,8 @@ along with the comparison links — do not edit the heading or the links by hand
 - Deleted-record handling (`ignore`, `log`, or `delete` when the Koha record has no items), driven by the `deleted=append` ID list and matched on field 001.
 - Run history and "Run now" on the tool page; the fetch window only advances after a successful staging run.
 
-[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/openfifth/koha-plugin-libris-catalogue-import/compare/v0.3.1...v0.3.2

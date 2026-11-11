@@ -48,14 +48,14 @@ use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
     qw( profile_format build_uri split_payload iso8601_utc clamp_from default_url default_profile error_detail has_records );
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::ProfileSummary qw( summarise_profile describe_matcher );
 
-our $VERSION         = '0.3.4';
+our $VERSION         = '0.3.5';
 
 our $metadata = {
     name            => 'Libris Catalogue Import',
     namespace       => 'libris_catalogue_import',
     author          => 'Open Fifth',
     date_authored   => '2026-10-13',
-    date_updated    => '2026-11-05',
+    date_updated    => '2026-11-11',
     minimum_version => '25.11.00',
     maximum_version => '26.05.00',
     version         => $VERSION,
