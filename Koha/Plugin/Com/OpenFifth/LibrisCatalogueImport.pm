@@ -48,7 +48,7 @@ use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
     qw( profile_format build_uri split_payload iso8601_utc clamp_from default_url default_profile error_detail has_records );
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::ProfileSummary qw( summarise_profile describe_matcher );
 
-our $VERSION         = '0.3.5';
+our $VERSION         = '0.3.6';
 
 our $metadata = {
     name            => 'Libris Catalogue Import',
