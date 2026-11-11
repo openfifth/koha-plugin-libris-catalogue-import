@@ -12,6 +12,10 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ## [Unreleased]
 
+### Changed
+
+- Docs and configure page: removed the unsupported mention of a Libris staging environment, and made the `locations=` (sigel) requirement and the auto-commit-off first-run advice prominent.
+
 ## [0.3.4] - 2026-11-05
 
 ## [0.3.3] - 2026-11-05
