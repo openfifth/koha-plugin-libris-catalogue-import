@@ -6,7 +6,6 @@ package Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export;
 
 use Modern::Perl;
 
-use Time::Local qw( timegm );
 use URI;
 
 use Exporter qw( import );
