@@ -14,6 +14,7 @@ along with the comparison links — do not edit the heading or the links by hand
 
 ### Changed
 
+- Removed the "first run: fetch changes since" setting (any stored value is ignored). Libris refuses `from` more than 3 weeks back, so the first run now fetches the last 20 days. A marker older than 3 weeks is clamped the same way and the run logged as `partial`.
 - Docs and configure page: removed the unsupported mention of a Libris staging environment, and made the `locations=` (sigel) requirement and the auto-commit-off first-run advice prominent.
 
 ## [0.3.4] - 2026-11-05

@@ -6,12 +6,17 @@ package Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export;
 
 use Modern::Perl;
 
+use Time::Local qw( timegm );
 use URI;
 
 use Exporter qw( import );
-our @EXPORT_OK = qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail has_records );
+our @EXPORT_OK = qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp clamp_from error_detail has_records );
 
 our $DEFAULT_URL = 'https://libris.kb.se/api/marc_export/';
+
+# Libris rejects requests reaching back more than 21 days (it is for
+# incremental updates, not full dumps). Stay a day inside that limit.
+our $MAX_WINDOW_DAYS = 20;
 
 our %DELETED_MODES = (
     ignore => 'ignore',     # drop deleted records
@@ -196,6 +201,28 @@ sub parse_deleted_ids {
     my $string = iso8601_utc($epoch);
 
 =cut
+
+=head2 clamp_from
+
+    my ( $from, $clamped ) = clamp_from( $from, $now_epoch );
+
+Returns the start of the export window. With no C<$from> (the first run) it is
+C<$MAX_WINDOW_DAYS> before now, the furthest back Libris allows. A C<$from>
+older than that is moved forward to it and C<$clamped> is true, because
+changes in the skipped gap cannot be fetched through this API.
+
+=cut
+
+sub clamp_from {
+    my ( $from, $now ) = @_;
+
+    my $earliest = iso8601_utc( $now - $MAX_WINDOW_DAYS * 86400 );
+    return ( $earliest, 0 ) unless $from;
+
+    $from = normalise_timestamp($from);
+    return ( $earliest, 1 ) if $from lt $earliest;
+    return ( $from, 0 );
+}
 
 sub iso8601_utc {
     my ($epoch) = @_;

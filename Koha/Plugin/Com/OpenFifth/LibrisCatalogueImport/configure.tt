@@ -62,11 +62,6 @@
                                 <textarea id="export_profile" name="export_profile" rows="14" cols="60">[% settings.export_profile | html %]</textarea>
                                 <div class="hint">Sent to Libris as-is. <strong>You must replace <code>CHANGEME</code> on the <code>locations=</code> line with your sigel(s)</strong>; it tells Libris whose records to send. Use <code>format=MARCXML</code> or <code>format=ISO2709</code>. See the <a href="https://libris.kb.se/api/docs/en/reference/marc21/" target="_blank" rel="noreferrer">Libris MARC21 export docs</a>.</div>
                             </li>
-                            <li>
-                                <label for="initial_from">First run: fetch changes since: </label>
-                                <input type="text" id="initial_from" name="initial_from" size="22" placeholder="2026-10-01T00:00:00Z" value="[% settings.initial_from | html %]"/>
-                                <div class="hint">Required before the first run, and ignored afterwards[% IF last_until %] (last successful run covered up to <strong>[% last_until | html %]</strong>)[% END %]. A date far in the past requests a very large export.</div>
-                            </li>
                         </ol>
                     </fieldset>
 

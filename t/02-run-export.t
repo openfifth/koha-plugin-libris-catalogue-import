@@ -1,6 +1,6 @@
 use Modern::Perl;
 
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Test::MockModule;
 use HTTP::Response;
 
@@ -15,6 +15,7 @@ use MARC::Record;
 use t::lib::TestBuilder;
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport;
+use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export qw( iso8601_utc );
 
 my $schema  = Koha::Database->new->schema;
 my $builder = t::lib::TestBuilder->new;
@@ -47,7 +48,7 @@ my $respond_with = sub {
 my $new_plugin = sub {
     my (%settings) = @_;
     my $plugin = Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport->new( { enable_plugins => 1 } );
-    $plugin->store_data( { import_profile_id => $settings{profile}->id, initial_from => '2026-10-01T00:00:00Z', last_until => '', deleted_mode => 'log', export_profile => "format=MARCXML\nlocations=S\n", %{ $settings{extra} // {} } } );
+    $plugin->store_data( { import_profile_id => $settings{profile}->id, last_until => '', deleted_mode => 'log', export_profile => "format=MARCXML\nlocations=S\n", %{ $settings{extra} // {} } } );
     return $plugin;
 };
 
@@ -150,16 +151,33 @@ subtest 'an empty MARCXML collection is treated as no changes' => sub {
     $schema->storage->txn_rollback;
 };
 
-subtest 'first run needs a start date' => sub {
+subtest 'first run starts 20 days back' => sub {
     plan tests => 2;
     $schema->storage->txn_begin;
 
-    my $profile = $new_profile->();
-    my $plugin  = $new_plugin->( profile => $profile, extra => { initial_from => '' } );
+    my $plugin = $new_plugin->( profile => $new_profile->() );
+    my $mock   = $respond_with->( 200, '' );
 
+    my $lo  = iso8601_utc( time - 20 * 86400 );
     my $run = $plugin->run_export;
-    is( $run->{outcome}, 'failure', 'refuses to run without a start date' );
-    like( $run->{error_message}, qr/No start date/, 'says why' );
+    is( $run->{outcome}, 'success', 'first run needs no start date' );
+    ok( $run->{from} ge $lo && $run->{from} le iso8601_utc( time - 20 * 86400 ), 'window starts 20 days back' );
+
+    $schema->storage->txn_rollback;
+};
+
+subtest 'a stale marker is clamped and reported' => sub {
+    plan tests => 3;
+    $schema->storage->txn_begin;
+
+    my $plugin = $new_plugin->( profile => $new_profile->(), extra => { last_until => iso8601_utc( time - 60 * 86400 ) } );
+    my $mock   = $respond_with->( 200, '' );
+
+    my $lo  = iso8601_utc( time - 20 * 86400 );
+    my $run = $plugin->run_export;
+    is( $run->{outcome}, 'partial', 'gap reported as partial' );
+    like( $run->{error_message}, qr/more than 3 weeks/, 'says why' );
+    ok( $run->{from} ge $lo && $run->{from} le iso8601_utc( time - 20 * 86400 ), 'from clamped' );
 
     $schema->storage->txn_rollback;
 };

@@ -1,11 +1,11 @@
 use Modern::Perl;
-use Test::More tests => 32;
+use Test::More tests => 38;
 
 use FindBin;
 use lib "$FindBin::Bin/..";
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
-    qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc default_url default_profile normalise_timestamp error_detail has_records );
+    qw( profile_format build_uri split_payload parse_deleted_ids iso8601_utc clamp_from default_url default_profile normalise_timestamp error_detail has_records );
 
 is( profile_format("name=x\nformat=ISO2709\n"), 'ISO2709', 'format read from profile' );
 is( profile_format("format = marcxml\n"),       'MARCXML', 'format is case-insensitive and tolerates spaces' );
@@ -59,3 +59,13 @@ ok( !has_records( $empty_collection, 'MARCXML' ), 'empty MARCXML collection is n
 ok(  has_records( '<collection><record><leader>x</leader></record></collection>', 'MARCXML' ), 'MARCXML with a record' );
 ok(  has_records( '<marc:collection><marc:record/></marc:collection>', 'MARCXML' ), 'namespace-prefixed record' );
 ok(  has_records( "00026nam a2200025 a 4500\x1e\x1d", 'ISO2709' ), 'ISO2709 data counts as records' );
+
+my $now = 1_793_000_000;    # arbitrary fixed 'now'
+my $earliest = iso8601_utc( $now - 20 * 86400 );
+is_deeply( [ clamp_from( undef, $now ) ], [ $earliest, 0 ], 'no from: start 20 days back, not clamped' );
+is_deeply( [ clamp_from( '', $now ) ],    [ $earliest, 0 ], 'empty from treated as none' );
+my $recent = iso8601_utc( $now - 86400 );
+is_deeply( [ clamp_from( $recent, $now ) ], [ $recent, 0 ], 'recent from kept as is' );
+is_deeply( [ clamp_from( iso8601_utc( $now - 40 * 86400 ), $now ) ], [ $earliest, 1 ], 'from older than the limit is clamped' );
+is_deeply( [ clamp_from( $earliest, $now ) ], [ $earliest, 0 ], 'from exactly at the limit is not clamped' );
+is_deeply( [ clamp_from( '2001-01-01', $now ) ], [ $earliest, 1 ], 'bare date is normalised then clamped' );

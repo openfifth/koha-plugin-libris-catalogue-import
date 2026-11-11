@@ -45,7 +45,7 @@ use Koha::ImportBatchProfiles;
 use Koha::Logger;
 
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::Export
-    qw( profile_format build_uri split_payload iso8601_utc default_url default_profile error_detail has_records );
+    qw( profile_format build_uri split_payload iso8601_utc clamp_from default_url default_profile error_detail has_records );
 use Koha::Plugin::Com::OpenFifth::LibrisCatalogueImport::ProfileSummary qw( summarise_profile describe_matcher );
 
 our $VERSION         = '0.3.4';
@@ -321,7 +321,7 @@ sub run_export {
 
     my $settings = $self->_settings;
     my $until    = iso8601_utc(time);
-    my $from     = $args{from} || $self->retrieve_data('last_until') || $settings->{initial_from};
+    my ( $from, $clamped ) = clamp_from( $args{from} || $self->retrieve_data('last_until'), time );
 
     my $run = {
         started_on  => $self->_now,
@@ -345,9 +345,6 @@ sub run_export {
     }
 
     try {
-        die "No start date: set 'First run: fetch changes since' in the plugin configuration\n"
-            unless $from;
-
         my ( $marc, $deleted_ids ) = $self->_fetch( $settings, $from, $until );
 
         if ( has_records( $marc, profile_format( $settings->{export_profile} ) ) ) {
@@ -363,12 +360,19 @@ sub run_export {
         $self->store_data( { last_until => $until } );
         $run->{outcome} = 'success';
 
+        # Libris only serves the last 3 weeks, so after a longer gap the
+        # missed changes can't be fetched. Say so rather than hide it.
+        if ($clamped) {
+            $run->{outcome}       = 'partial';
+            $run->{error_message} = "The last successful run was more than 3 weeks ago, further back than Libris serves. Fetched from $from instead; changes before that were missed. Ask Libris customer service for a full dump to catch up.";
+        }
+
         if (@$deleted_ids) {
             my $del = $self->_process_deletions( $settings, $deleted_ids );
             $run->{num_deleted} = $del->{deleted};
             if ( @{ $del->{errors} } ) {
                 $run->{outcome}       = 'partial';
-                $run->{error_message} = join( "\n", @{ $del->{errors} } );
+                $run->{error_message} = join( "\n", grep { length } $run->{error_message}, @{ $del->{errors} } );
             }
         }
     } catch {
@@ -576,7 +580,7 @@ sub _biblionumbers_for_control_number {
 sub _setting_keys {
     return qw(
         base_url export_profile deleted_mode virtual_delete user_agent
-        import_profile_id auto_commit framework overlay_framework initial_from
+        import_profile_id auto_commit framework overlay_framework
     );
 }
 
@@ -625,18 +629,13 @@ sub _validate_settings {
     return { error => 'The API base URL must be an https:// address.' }
         unless ( $settings->{base_url} // '' ) =~ m{^https://};
 
-    return { error => 'First-run start date must be ISO-8601, e.g. 2026-10-01T00:00:00Z.' }
-        if length( $settings->{initial_from} // '' )
-        && $settings->{initial_from} !~ /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}Z)?$/;
-
     return { settings => $settings };
 }
 
 sub _is_configured {
     my ($self) = @_;
     my $s = $self->_settings;
-    return $s->{import_profile_id}
-        && ( $self->retrieve_data('last_until') || $s->{initial_from} );
+    return $s->{import_profile_id};
 }
 
 # LOGGING

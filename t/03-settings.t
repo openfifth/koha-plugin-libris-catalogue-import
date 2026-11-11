@@ -1,6 +1,6 @@
 use Modern::Perl;
 
-use Test::More tests => 7;
+use Test::More tests => 5;
 
 use Koha::Database;
 
@@ -21,7 +21,6 @@ my %good = (
     deleted_mode      => 'log',
     export_profile    => "format=MARCXML\nlocations=S NB\n",
     base_url          => 'https://libris.kb.se/api/marc_export/',
-    initial_from      => '2026-10-01T00:00:00Z',
 );
 
 ok( !$plugin->_validate_settings( {%good} )->{error}, 'good settings validate' );
@@ -30,7 +29,5 @@ like( $plugin->_validate_settings( { %good, import_profile_id => '' } )->{error}
 like( $plugin->_validate_settings( { %good, deleted_mode => 'nuke' } )->{error}, qr/deleted/i, 'unknown deleted mode rejected' );
 like( $plugin->_validate_settings( { %good, export_profile => "format=MARCXML\nlocations=CHANGEME\n" } )->{error}, qr/CHANGEME/, 'placeholder sigel rejected' );
 like( $plugin->_validate_settings( { %good, base_url => 'http://libris.kb.se/' } )->{error}, qr/https/, 'plain http rejected' );
-like( $plugin->_validate_settings( { %good, initial_from => 'yesterday' } )->{error}, qr/ISO-8601/, 'bad start date rejected' );
-ok( !$plugin->_validate_settings( { %good, initial_from => '' } )->{error}, 'start date optional at save time' );
 
 $schema->storage->txn_rollback;

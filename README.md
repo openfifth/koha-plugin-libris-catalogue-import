@@ -13,7 +13,6 @@ This plugin only covers catalogue records. Other Libris services (ILL, patrons, 
 3. Plugin → Configure:
    - Choose the import profile (the page then shows what it contains: matching rule, overlay/no-match/item actions and MARC modification template).
    - **Set your Libris sigel(s) on the `locations=` line of the export profile.** This is the one setting you must change: it tells Libris whose records to send, and it is pre-filled with `CHANGEME`, which the plugin refuses to run with. The other export profile options are described in the [Libris MARC21 export documentation](https://libris.kb.se/api/docs/en/reference/marc21/).
-   - Set the date the first run should fetch from.
 
    The API address is pre-filled with the production Libris endpoint, so you don't need to look it up; it is only editable in case Libris moves it.
 4. Leave **auto-commit off** for the first runs, so each batch stays staged for you to review before anything changes in your catalogue.
@@ -21,6 +20,7 @@ This plugin only covers catalogue records. Other Libris services (ILL, patrons, 
 
 ## How it works
 
+- The first run fetches the last 20 days of changes: Libris refuses requests reaching back more than 3 weeks, because the API is for staying up to date, not for full dumps. **To load your existing catalogue, ask Libris customer service for a full dump** and import it separately. If nightly runs stop for more than 3 weeks, the next run restarts from 20 days back and is logged as `partial`, since the changes in the gap can't be fetched.
 - `from` is the end of the previous successful run; `until` is now (UTC). The marker only advances after staging succeeds, so a failed run is retried from the same point. Libris subtracts one second from `from` itself, so keep the server clock on NTP.
 - Deleted records arrive as a list of IDs after the MARC data (`deleted=append`). The plugin matches them to Koha records on **field 001** and either logs them or deletes them. A record that still has items is never deleted.
 - Staged batches follow the usual Koha workflow. Leave auto-commit off to have a cataloguer review each night's batch.
