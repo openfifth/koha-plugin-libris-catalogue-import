@@ -45,7 +45,7 @@
                     <input type="hidden" name="save" value="1"/>
 
                     <fieldset class="rows">
-                        <legend>Libris export</legend>
+                        <legend>Libris connection</legend>
                         <ol>
                             <li>
                                 <label for="base_url">API address: </label>
@@ -58,9 +58,9 @@
                                 <div class="hint">Libris asks API users to identify themselves. Include a contact address.</div>
                             </li>
                             <li>
-                                <label for="export_profile">Export profile: </label>
+                                <label for="export_profile">Libris export profile: </label>
                                 <textarea id="export_profile" name="export_profile" rows="14" cols="60">[% settings.export_profile | html %]</textarea>
-                                <div class="hint">Sent to Libris as-is. <strong>You must replace <code>CHANGEME</code> on the <code>locations=</code> line with your sigel(s)</strong>; it tells Libris whose records to send. Use <code>format=MARCXML</code> or <code>format=ISO2709</code>. See the <a href="https://libris.kb.se/api/docs/en/reference/marc21/" target="_blank" rel="noreferrer">Libris MARC21 export docs</a>.</div>
+                                <div class="hint">Libris exports records to you according to this profile, and it is sent to Libris as-is. <strong>You must replace <code>CHANGEME</code> on the <code>locations=</code> line with your sigel(s)</strong>; it tells Libris whose records to send. Use <code>format=MARCXML</code> or <code>format=ISO2709</code>. See the <a href="https://libris.kb.se/api/docs/en/reference/marc21/" target="_blank" rel="noreferrer">Libris MARC21 export documentation</a>.</div>
                             </li>
                         </ol>
                     </fieldset>
